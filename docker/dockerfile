@@ -1,3 +1,5 @@
+ARG BASE_IMAGE=louislam/uptime-kuma:base2
+
 FROM louislam/uptime-kuma:base2 AS build
 USER node
 WORKDIR /app
