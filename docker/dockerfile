@@ -1,18 +1,27 @@
-ARG BASE_IMAGE=louislam/uptime-kuma:base2
-
-FROM louislam/uptime-kuma:builder-go AS build_healthcheck
-
 FROM louislam/uptime-kuma:base2 AS build
 USER node
 WORKDIR /app
+
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
-COPY --chown=node:node .npmrc .npmrc
-COPY --chown=node:node package.json package.json
-COPY --chown=node:node package-lock.json package-lock.json
-RUN npm ci --omit=dev
-COPY . .
+
+# Nur die für npm nötigen Files zuerst kopieren
+COPY --chown=node:node package.json package-lock.json .npmrc ./
+
+# Alle Dependencies (inkl. dev) installieren, damit "npm run build" funktioniert
+RUN npm ci
+
+# Restlichen Code kopieren (inkl. deiner Änderungen)
+COPY --chown=node:node . .
+
+# Healthcheck aus Golang-Builder rüberziehen
 COPY --chown=node:node --from=build_healthcheck /app/extra/healthcheck /app/extra/healthcheck
-RUN mkdir ./data
+
+# Frontend bauen -> erzeugt /app/dist/**
+RUN npm run build
+
+# Datenverzeichnis für später (wird von Volume übermountet, aber schadet nicht)
+RUN mkdir -p ./data
+
 
 FROM $BASE_IMAGE AS release
 WORKDIR /app
