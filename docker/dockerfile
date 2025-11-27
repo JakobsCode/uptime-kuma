@@ -15,9 +15,6 @@ RUN npm ci
 # Restlichen Code kopieren (inkl. deiner Änderungen)
 COPY --chown=node:node . .
 
-# Healthcheck aus Golang-Builder rüberziehen
-COPY --chown=node:node --from=build_healthcheck /app/extra/healthcheck /app/extra/healthcheck
-
 # Frontend bauen -> erzeugt /app/dist/**
 RUN npm run build
 
